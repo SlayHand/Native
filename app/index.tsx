@@ -23,7 +23,7 @@ export default function SplashScreen() {
           onPress={() => router.push("/sign-up")}
           style={({ pressed }) => [
             styles.ctaPrimary,
-            pressed && styles.pressed,
+            pressed ? styles.pressed : undefined, // ⬅️ fix
           ]}
         >
           <Text style={styles.ctaPrimaryText}>Sign Up</Text>
@@ -34,7 +34,7 @@ export default function SplashScreen() {
           onPress={() => router.push("/sign-in")}
           style={({ pressed }) => [
             styles.ctaSecondary,
-            pressed && styles.pressed,
+            pressed ? styles.pressed : undefined, // ⬅️ fix
           ]}
         >
           <Text style={styles.ctaSecondaryText}>Sign In</Text>
