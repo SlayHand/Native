@@ -27,6 +27,7 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    height: 60,
   },
   ctaPrimaryText: {
     color: "#FFFFFF",
@@ -43,6 +44,7 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    height: 60,
   },
   ctaSecondaryText: {
     color: "#4F63AC",

@@ -1,4 +1,3 @@
-// app/(auth)/styles.ts
 import { StyleSheet } from "react-native";
 
 export const auth = StyleSheet.create({
@@ -22,7 +21,7 @@ export const auth = StyleSheet.create({
   headerIcon: { width: 18, height: 18, tintColor: "#4F63AC" },
   headerTitle: { fontSize: 24, fontWeight: "700", color: "#4F63AC" },
 
-  label: { fontSize: 14, color: "#5B6B83", marginBottom: 6 },
+  label: { fontSize: 14, color: "#4F63AC", marginBottom: 6 },
   inputWrapper: { position: "relative" },
   input: {
     borderWidth: 1,
@@ -32,6 +31,7 @@ export const auth = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     fontSize: 16,
+    height: 60,
     color: "#111827",
   },
   eyeBtn: {
@@ -54,7 +54,7 @@ export const auth = StyleSheet.create({
     justifyContent: "center",
   },
   checkIcon: { width: 14, height: 14 },
-  checkText: { color: "#5B6B83" },
+  checkText: { color: "#4F63AC" },
   linkBold: { color: "#4F63AC", fontWeight: "700" },
 
   cta: {
@@ -63,6 +63,7 @@ export const auth = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    height: 60,
   },
   ctaText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 
@@ -73,21 +74,29 @@ export const auth = StyleSheet.create({
     marginVertical: 8,
   },
   dividerLine: { flex: 1, height: 1, backgroundColor: "#E5E7EB" },
-  dividerText: { color: "#5B6B83" },
+  dividerText: {
+    color: "#4F63AC",
+    fontWeight: "600",
+    fontSize: 14,
+  },
 
   socialBtn: {
     backgroundColor: "#374151",
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
+    width: 142,
+    height: 60,
     gap: 8,
+    alignSelf: "center",
   },
   gIcon: { width: 18, height: 18 },
   socialText: { color: "#fff", fontWeight: "600" },
 
   footer: { alignItems: "center", marginTop: 8 },
+  footerText: { color: "#4F63AC" },
   footerLink: { color: "#4F63AC", fontWeight: "600" },
 
   pressed: { opacity: 0.8 },
