@@ -1,31 +1,77 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-const KEY = "auth_token";
+export const AUTH_STORAGE_KEY = "auth_token";
+
+type TokenListener = (token: string | null) => void;
+const subscribers = new Set<TokenListener>();
+function subscribe(listener: TokenListener) {
+  subscribers.add(listener);
+  return () => subscribers.delete(listener);
+}
+function notifyAll(token: string | null) {
+  for (const fn of subscribers) fn(token);
+}
 
 export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
+
     (async () => {
       try {
-        const t = await AsyncStorage.getItem(KEY);
-        setToken(t);
+        const t = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+        if (mountedRef.current) setToken(t);
       } finally {
-        setLoading(false);
+        if (mountedRef.current) setLoading(false);
       }
     })();
+
+    const unsub = subscribe((t) => {
+      if (mountedRef.current) setToken(t);
+    });
+
+    return () => {
+      mountedRef.current = false;
+      unsub();
+    };
   }, []);
 
-  async function setSignedIn(newToken: string) {
-    await AsyncStorage.setItem(KEY, newToken);
-    setToken(newToken);
-  }
-  async function signOut() {
-    await AsyncStorage.removeItem(KEY);
-    setToken(null);
-  }
+  const refresh = useCallback(async () => {
+    const t = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+    if (mountedRef.current) setToken(t);
+    notifyAll(t);
+    return t;
+  }, []);
 
-  return { loading, token, signedIn: !!token, setSignedIn, signOut };
+  const setSignedIn = useCallback(async (newToken: string) => {
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, newToken);
+    if (mountedRef.current) setToken(newToken);
+    notifyAll(newToken);
+  }, []);
+
+  const signOut = useCallback(async () => {
+    await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+    if (mountedRef.current) setToken(null);
+    notifyAll(null);
+  }, []);
+
+  const getAuthHeader = useCallback((): Record<string, string> => {
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  }, [token]);
+
+  return {
+    loading,
+    token,
+    signedIn: !!token,
+    setSignedIn,
+    signOut,
+    refresh,
+    getAuthHeader,
+  };
 }

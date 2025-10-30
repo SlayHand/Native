@@ -1,30 +1,34 @@
 // app/_layout.tsx
 import { useAuth } from "@/hooks/use-auth";
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Slot, usePathname, useRouter, useSegments } from "expo-router";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 export default function RootLayout() {
-  const router = useRouter();
-  const segments = useSegments();
   const { loading, signedIn } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const segments = useSegments();
 
   useEffect(() => {
     if (loading) return;
 
-    const top = segments[0]; // undefined => "/" (Splash)
-    const inAuth = top === "(auth)";
-    const inApp = top === "(app)";
+    // Route group "(auth)" ei ilmu URL-i, seega loeme mõlemat:
+    const top = segments[0]; // võib olla "(auth)" native's
+    const inAuthByGroup = top === "(auth)";
+    const inAuthByPath = pathname === "/sign-in" || pathname === "/sign-up";
+    const inAuth = inAuthByGroup || inAuthByPath;
+
+    const atRoot = pathname === "/" || pathname === "";
 
     if (signedIn) {
-      // kui sees, vii tabidesse (kui juba appis, jäta rahule)
-      if (!inApp) router.replace("/(app)/(tabs)");
+      // kui sees ja oled Splashis või authis -> Tabs
+      if (inAuth || atRoot) router.replace("/(app)/(tabs)");
     } else {
-      // kui pole sees, blokime app-segmendi
-      if (inApp) router.replace("/");
-      // "/" ja (auth) on lubatud
+      // kui väljas – lubame "/" ja auth-lehed; muu tagasi Splashile
+      if (!inAuth && !atRoot) router.replace("/");
     }
-  }, [loading, signedIn, segments, router]);
+  }, [loading, signedIn, pathname, segments, router]);
 
   if (loading) {
     return (

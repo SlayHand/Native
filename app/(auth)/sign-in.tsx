@@ -2,8 +2,8 @@
 import ArrowPng from "@/assets/images/arrow.png";
 import EyeOpen from "@/assets/images/eye.png";
 import EyeClosed from "@/assets/images/eye_closed.png";
+import { useAuth } from "@/hooks/use-auth";
 import { loginUser } from "@/lib/api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -11,24 +11,22 @@ import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import { auth } from "./styles";
 
 export default function SignIn() {
+  const { setSignedIn } = useAuth();
+
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const canSubmit = !!email.trim() && !!pwd && !loading;
+  const canSubmit = Boolean(email.trim() && pwd && !loading);
 
   async function onSubmit() {
     try {
+      if (!canSubmit) return;
       setLoading(true);
-      const { token } = await loginUser({
-        email: email.trim(),
-        password: pwd,
-      });
 
-      await AsyncStorage.setItem("auth_token", token);
-
-      // ⬇️ mine kohe Tabs vaatesse (mitte "/" ehk Splash)
+      const { token } = await loginUser({ email: email.trim(), password: pwd });
+      await setSignedIn(token);
       router.replace("/(app)/(tabs)");
     } catch (e: any) {
       Alert.alert("Sign in failed", e?.message ?? "Try again");
@@ -39,7 +37,6 @@ export default function SignIn() {
 
   return (
     <View style={auth.screen}>
-      {/* Custom header */}
       <View style={auth.headerRow}>
         <Pressable
           onPress={() => router.replace("/")}
@@ -55,7 +52,6 @@ export default function SignIn() {
         <Text style={auth.headerTitle}>Sign In</Text>
       </View>
 
-      {/* E-mail */}
       <Text style={auth.label}>E-mail</Text>
       <TextInput
         style={auth.input}
@@ -71,7 +67,6 @@ export default function SignIn() {
         returnKeyType="next"
       />
 
-      {/* Password */}
       <Text style={auth.label}>Password</Text>
       <View style={auth.inputWrapper}>
         <TextInput
@@ -94,14 +89,11 @@ export default function SignIn() {
           onPress={() => setShow((v) => !v)}
           hitSlop={8}
           style={auth.eyeBtn}
-          accessibilityRole="button"
-          accessibilityLabel={show ? "Hide password" : "Show password"}
         >
           <Image source={show ? EyeClosed : EyeOpen} style={auth.eyeIcon} />
         </Pressable>
       </View>
 
-      {/* CTA */}
       <Pressable
         style={[auth.cta, !canSubmit ? { opacity: 0.6 } : undefined]}
         disabled={!canSubmit}
@@ -110,30 +102,8 @@ export default function SignIn() {
         <Text style={auth.ctaText}>{loading ? "Please wait…" : "Sign In"}</Text>
       </Pressable>
 
-      {/* Divider */}
-      <View style={auth.dividerRow}>
-        <View style={auth.dividerLine} />
-        <Text style={auth.dividerText}>Or sign in with</Text>
-        <View style={auth.dividerLine} />
-      </View>
-
-      {/* Google */}
-      <Pressable
-        style={auth.socialBtn}
-        onPress={() => {
-          /* TODO: Google sign-in */
-        }}
-      >
-        <Image
-          source={require("@/assets/images/Vector.png")}
-          style={auth.gIcon}
-        />
-        <Text style={auth.socialText}>Google</Text>
-      </Pressable>
-
-      {/* Footer */}
       <View style={auth.footer}>
-        <Pressable onPress={() => router.push("/sign-up")}>
+        <Pressable onPress={() => router.push("/(auth)/sign-up")}>
           <Text style={auth.footerText}>
             Don’t have an account? <Text style={auth.footerLink}>Sign Up</Text>
           </Text>
