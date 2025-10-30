@@ -1,26 +1,56 @@
-// app/(tabs)/index.tsx
-import CategoryBox from "@/components/CategoryBox";
 import Header from "@/components/Header";
 import ProductHomeItem from "@/components/ProductHomeItem";
-import { categories } from "@/data/categories";
-import { products as allProducts } from "@/data/products";
-import React, { useEffect, useState } from "react";
-import { Dimensions, FlatList, Text, View } from "react-native";
+import { listCategories, listProducts, Product } from "@/lib/shopApi";
+import { router } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 
 const { width } = Dimensions.get("window");
 const gap = 12;
 const columns = 2;
 const itemWidth = Math.floor((width - 16 * 2 - gap) / columns);
 
+type CategoryItem = { title: string };
+
 export default function HomeScreen() {
+  const [loading, setLoading] = useState(true);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([
+    { title: "Popular" },
+  ]);
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [keyword, setKeyword] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<number | "Popular">(
-    "Popular"
-  );
-  const [filtered, setFiltered] = useState(allProducts);
+  const [selectedCategory, setSelectedCategory] = useState<string>("Popular");
 
   useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const [prods, cats] = await Promise.all([
+          listProducts(),
+          listCategories(),
+        ]);
+        setAllProducts(prods);
+        setCategories([
+          { title: "Popular" },
+          ...cats.map((c) => ({ title: c })),
+        ]);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const filtered = useMemo(() => {
     let next = allProducts;
     if (selectedCategory !== "Popular")
       next = next.filter((p) => p.category === selectedCategory);
@@ -28,8 +58,16 @@ export default function HomeScreen() {
       const kw = keyword.toLowerCase();
       next = next.filter((p) => p.title.toLowerCase().includes(kw));
     }
-    setFiltered(next);
-  }, [selectedCategory, keyword]);
+    return next;
+  }, [allProducts, selectedCategory, keyword]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F6F6F6" }}>
@@ -42,24 +80,41 @@ export default function HomeScreen() {
         setKeyword={setKeyword}
       />
 
-      {/* kategooriad */}
+      {/* Kategooriad */}
       <View style={{ paddingVertical: 12, paddingLeft: 16 }}>
         <FlatList
           data={categories}
-          keyExtractor={(item, idx) => String(item.id ?? item.title ?? idx)}
+          keyExtractor={(item, idx) => String(item.title ?? idx)}
           horizontal
           showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <CategoryBox
-              item={item}
-              selected={selectedCategory === (item.id ?? "Popular")}
-              onPress={() => setSelectedCategory(item.id ?? "Popular")}
-            />
-          )}
+          renderItem={({ item }) => {
+            const selected = selectedCategory === (item.title ?? "Popular");
+            return (
+              <Pressable
+                onPress={() => setSelectedCategory(item.title ?? "Popular")}
+                style={{
+                  paddingVertical: 10,
+                  paddingHorizontal: 14,
+                  borderRadius: 12,
+                  marginRight: 10,
+                  backgroundColor: selected ? "#4F63AC" : "#E5E7EB",
+                }}
+              >
+                <Text
+                  style={{
+                    color: selected ? "#fff" : "#111827",
+                    fontWeight: "600",
+                  }}
+                >
+                  {item.title}
+                </Text>
+              </Pressable>
+            );
+          }}
         />
       </View>
 
-      {/* tooted */}
+      {/* Toodete grid */}
       <View style={{ flex: 1, paddingHorizontal: 16 }}>
         {filtered.length === 0 ? (
           <Text
@@ -79,10 +134,13 @@ export default function HomeScreen() {
             renderItem={({ item }) => (
               <View style={{ width: itemWidth }}>
                 <ProductHomeItem
-                  item={item}
-                  onPress={() => {
-                    /* TODO: detail nav */
+                  item={{
+                    id: item.id,
+                    title: item.title,
+                    price: item.price,
+                    image: item.image,
                   }}
+                  onPress={() => router.push(`/(app)/product/${item.id}`)}
                 />
               </View>
             )}
