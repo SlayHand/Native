@@ -3,9 +3,13 @@
 ## Setup
 
 1. Installi dependancies:
+
    ```bash
    npm i
+   npx expo install expo-image-picker
+
    ```
+
 2. Käivita dev server:
    npm run start
 

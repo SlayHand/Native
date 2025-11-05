@@ -1,7 +1,11 @@
+// app/(tabs)/_layout.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
+import { Pressable } from "react-native";
 
 export default function TabsLayout() {
+  const router = useRouter();
+
   return (
     <Tabs
       screenOptions={{
@@ -24,6 +28,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="favourites"
         options={{
@@ -37,6 +42,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
@@ -47,6 +53,14 @@ export default function TabsLayout() {
               color={color}
               size={size}
             />
+          ),
+          tabBarButton: (props) => (
+            <Pressable
+              {...(props as any)}
+              onPress={() => router.replace("/(app)/(tabs)/profile")}
+            >
+              {props.children}
+            </Pressable>
           ),
         }}
       />

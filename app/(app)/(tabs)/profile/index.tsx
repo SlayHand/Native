@@ -1,13 +1,42 @@
 import Header from "@/components/Header";
 import ListItem from "@/components/ListItem";
 import { useAuth } from "@/hooks/use-auth";
+import { me } from "@/lib/api";
 import { router } from "expo-router";
-import React from "react";
-import { Text, View } from "react-native";
-import { Pressable } from "react-native-gesture-handler";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 export default function ProfileScreen() {
-  const { signOut } = useAuth();
+  const { token, signOut } = useAuth();
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [name, setName] = useState("User");
+  const [email, setEmail] = useState("user@mail.com");
+
+  // tõmba päris kasutaja
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!token) {
+        setLoadingUser(false);
+        return;
+      }
+      try {
+        setLoadingUser(true);
+        const u = await me(token);
+        if (!cancelled) {
+          setName(u.name ?? "User");
+          setEmail(u.email ?? "user@mail.com");
+        }
+      } catch {
+        // jätame fallbacki
+      } finally {
+        if (!cancelled) setLoadingUser(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   async function onLogout() {
     await signOut();
@@ -20,14 +49,20 @@ export default function ProfileScreen() {
 
       <View style={{ padding: 16 }}>
         {/* Kasutaja */}
-        <Text style={{ fontSize: 22, fontWeight: "700" }}>User</Text>
-        <Text style={{ color: "#6B7280", marginTop: 4 }}>user@mail.com</Text>
+        {loadingUser ? (
+          <ActivityIndicator />
+        ) : (
+          <>
+            <Text style={{ fontSize: 22, fontWeight: "700" }}>{name}</Text>
+            <Text style={{ color: "#6B7280", marginTop: 4 }}>{email}</Text>
+          </>
+        )}
 
         {/* Kaardid */}
         <View style={{ marginTop: 16, gap: 12 }}>
           <ListItem
             title="My Listings"
-            onPress={() => router.push("/(app)/(tabs)/profile/new-listing")}
+            onPress={() => router.push("/(app)/(tabs)/profile/listings")}
           />
           <ListItem
             title="Settings"
@@ -36,7 +71,7 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Alumine CTA (soovi korral) */}
+      {/* Alumine CTA */}
       <View style={{ marginTop: "auto", padding: 16 }}>
         <Pressable
           onPress={() => router.push("/(app)/(tabs)/profile/new-listing")}

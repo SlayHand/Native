@@ -1,10 +1,8 @@
-// lib/api.ts
-const API = process.env.EXPO_PUBLIC_API_URL || "http://localhost:4000";
+const API = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000";
 
-type FetchInit = RequestInit & { headers?: Record<string, string> };
-
-async function jsonFetch<T>(url: string, init: FetchInit = {}): Promise<T> {
-  const r = await fetch(url, {
+async function jsonFetch<T>(url: string, init: RequestInit = {}): Promise<T> {
+  // teeme alati JSON-i
+  const res = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -12,20 +10,25 @@ async function jsonFetch<T>(url: string, init: FetchInit = {}): Promise<T> {
     },
   });
 
-  // proovi JSON-i lugeda; kui ei õnnestu, kasuta tühi obj
-  const data = (await r.json().catch(() => ({}))) as any;
+  const text = await res.text();
+  let data: any = {};
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.log("jsonFetch: could not parse JSON", text);
+    }
+  }
 
-  if (!r.ok) {
-    // backendis saadame { error: "..." }
-    const msg = data?.error || `HTTP ${r.status}`;
-    throw new Error(msg);
+  if (!res.ok) {
+    throw new Error(data?.error || `HTTP ${res.status}`);
   }
 
   return data as T;
 }
 
-/** AUTH **/
-export async function registerUser(payload: {
+// --- AUTH ---
+export function registerUser(payload: {
   name: string;
   email: string;
   password: string;
@@ -36,40 +39,91 @@ export async function registerUser(payload: {
   });
 }
 
-export async function loginUser(payload: { email: string; password: string }) {
+export function loginUser(payload: { email: string; password: string }) {
   return jsonFetch<{ user: any; token: string }>(`${API}/api/auth/login`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export async function me(token: string) {
+export function me(token: string) {
   return jsonFetch<{ id: string; name: string; email: string }>(
     `${API}/api/auth/me`,
-    { headers: { Authorization: `Bearer ${token}` } }
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
   );
 }
 
-export async function updateMe(
+export function updateMe(
   token: string,
   payload: { name?: string; email?: string }
 ) {
-  // tagastab { user, token? } — kui email muutus, võib tulla uus JWT
-  return jsonFetch<{ user: any; token?: string }>(`${API}/api/auth/me`, {
+  return jsonFetch<{
+    user: { id: string; name: string; email: string };
+    token?: string;
+  }>(`${API}/api/auth/me`, {
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }
 
-export async function changePassword(
+export function changePassword(
   token: string,
   payload: { oldPassword: string; newPassword: string }
 ) {
-  // NB! Nimed PEAVAD olema oldPassword + newPassword
   return jsonFetch<{ ok: true }>(`${API}/api/auth/change-password`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
+}
+
+/* =========================
+   LISTINGS
+   ========================= */
+
+export type ListingPayload = {
+  title: string;
+  price: number;
+  category: string;
+  description?: string;
+  image?: string;
+};
+
+export type Listing = ListingPayload & {
+  id: string;
+  userId: string;
+  createdAt: number;
+};
+
+export function listAllListings(): Promise<Listing[]> {
+  return jsonFetch<Listing[]>(`${API}/api/listings`);
+}
+
+export function myListings(token: string): Promise<Listing[]> {
+  return jsonFetch<Listing[]>(`${API}/api/listings/mine`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function createListing(token: string, payload: ListingPayload) {
+  console.log("[api] createListing payload:", payload);
+  return jsonFetch<Listing>(`${API}/api/listings`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteListing(token: string, id: string) {
+  console.log("[api] deleteListing id:", id);
+  return jsonFetch<{ ok: true }>(`${API}/api/listings/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+export function getListing(id: string) {
+  return jsonFetch<Listing>(`${API}/api/listings/${id}`);
 }

@@ -1,7 +1,7 @@
-// app/(tabs)/favourites.tsx
 import Header from "@/components/Header";
 import ProductHomeItem from "@/components/ProductHomeItem";
 import { useFavorites } from "@/hooks/use-favourites";
+import { listAllListings, Listing } from "@/lib/api"; // ← lisa see
 import { listProducts, Product } from "@/lib/shopApi";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -21,24 +21,56 @@ const itemWidth = Math.floor((width - 16 * 2 - gap) / columns);
 export default function FavoritesScreen() {
   const { loading: favLoading, ids } = useFavorites();
   const [loading, setLoading] = useState(true);
-  const [all, setAll] = useState<Product[]>([]);
+
+  const [storeProducts, setStoreProducts] = useState<Product[]>([]);
+  const [localListings, setLocalListings] = useState<Listing[]>([]);
 
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
+
+        // 1) fakestore
         const prods = await listProducts();
-        setAll(prods);
+        setStoreProducts(prods);
+
+        // 2) sinu enda API
+        const locals = await listAllListings();
+        setLocalListings(locals);
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  const items = useMemo(
-    () => all.filter((p) => ids.includes(p.id)),
-    [all, ids]
-  );
+  // normaliseerime: favourites hookis on tõenäoliselt stringid
+  const favIds = ids.map((x) => String(x));
+
+  // pane mõlemad kokku ühte massiivi ühtlase kujuga objektidena
+  const items = useMemo(() => {
+    const storeMapped = storeProducts
+      .filter((p) => favIds.includes(String(p.id)))
+      .map((p) => ({
+        id: String(p.id),
+        title: p.title,
+        price: p.price,
+        image: p.image,
+        source: "store" as const,
+      }));
+
+    const localMapped = localListings
+      .filter((l) => favIds.includes(String(l.id)))
+      .map((l) => ({
+        id: l.id,
+        title: l.title,
+        price: l.price,
+        image: l.image,
+        source: "local" as const,
+      }));
+
+    return [...storeMapped, ...localMapped];
+  }, [storeProducts, localListings, favIds]);
+
   const isLoading = loading || favLoading;
 
   return (
@@ -61,7 +93,7 @@ export default function FavoritesScreen() {
         ) : (
           <FlatList
             data={items}
-            keyExtractor={(item) => String(item.id)}
+            keyExtractor={(item) => item.id}
             numColumns={2}
             columnWrapperStyle={{
               justifyContent: "space-between",
@@ -74,9 +106,17 @@ export default function FavoritesScreen() {
                     id: item.id,
                     title: item.title,
                     price: item.price,
-                    image: item.image,
+                    image: item.image || "",
                   }}
-                  onPress={() => router.push(`/(app)/product/${item.id}`)}
+                  onPress={() =>
+                    router.push(
+                      // kui on “store” → number-id tee
+                      item.source === "store"
+                        ? `/(app)/product/${item.id}`
+                        : // kui on “local” → sinu enda id (string)
+                          `/(app)/product/${item.id}`
+                    )
+                  }
                 />
               </View>
             )}

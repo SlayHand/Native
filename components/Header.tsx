@@ -35,7 +35,6 @@ export default function Header({
   rightText,
   rightIcon,
   onRightPress,
-  onLogout,
 }: Props) {
   return (
     <View
