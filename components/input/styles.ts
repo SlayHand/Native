@@ -26,8 +26,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: "#111827",
-    padding: 0, // väldi topelt paddingut (fieldRow annab padja)
-    height: 36, // visuaalne kõrgus; koos fieldRow paddinguga kokku ~60
+    padding: 0,
   },
   eyeBtn: {
     marginLeft: 8,

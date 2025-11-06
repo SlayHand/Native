@@ -108,7 +108,7 @@ export default function NewListingScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F6F6F6" }}>
+    <View style={{ flex: 1, backgroundColor: "#ffffffff" }}>
       <Header title="Create a new listing" showBack />
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>

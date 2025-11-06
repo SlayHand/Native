@@ -113,10 +113,11 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F6F6F6" }}>
+    <View style={{ flex: 1, backgroundColor: "#ffffffff" }}>
       <Header
-        title="Home"
+        title="Find all you need"
         showSearch
+        searchOnLeft
         showSearchInput={showSearchInput}
         onToggleSearch={() => setShowSearchInput((v) => !v)}
         keyword={keyword}

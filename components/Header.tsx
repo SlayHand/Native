@@ -1,26 +1,25 @@
 // components/Header.tsx
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Image, Pressable, Text, TextInput, View } from "react-native";
 
 type Props = {
   title: string;
-
-  // Back-nupp
   showBack?: boolean;
   onBack?: () => void;
 
-  // Otsing (Home ekraanil)
   showSearch?: boolean;
   showSearchInput?: boolean;
   onToggleSearch?: () => void;
   keyword?: string;
   setKeyword?: (v: string) => void;
 
-  // Parem nupp (nt "Log out")
   rightText?: string;
   rightIcon?: React.ReactNode;
   onRightPress?: () => void;
+
+  // ← uus
+  searchOnLeft?: boolean;
 };
 
 export default function Header({
@@ -35,6 +34,7 @@ export default function Header({
   rightText,
   rightIcon,
   onRightPress,
+  searchOnLeft = false,
 }: Props) {
   return (
     <View
@@ -47,81 +47,95 @@ export default function Header({
         borderBottomColor: "#E5E7EB",
       }}
     >
-      {/* Ülemine rida: Back + Title + Right */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        {/* Vasak: back + title */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          {showBack ? (
-            <Pressable
-              onPress={onBack ?? (() => router.back())}
-              accessibilityRole="button"
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 1,
-                borderColor: "#D7DCE5",
-              }}
-            >
-              <Text style={{ fontSize: 18 }}>‹</Text>
-            </Pressable>
-          ) : null}
-
-          <Text style={{ fontSize: 22, fontWeight: "700" }}>{title}</Text>
-        </View>
-
-        {/* Parem: kas otsingu-ikoon või custom right-nupp */}
-        {rightText || rightIcon ? (
-          <Pressable
-            onPress={onRightPress}
-            accessibilityRole="button"
-            style={{
-              paddingHorizontal: 12,
-              height: 40,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: "#D7DCE5",
-            }}
-          >
-            {rightIcon ? (
-              rightIcon
-            ) : (
-              <Text style={{ fontWeight: "700" }}>{rightText}</Text>
-            )}
-          </Pressable>
-        ) : showSearch ? (
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        {/* LEFT SLOT */}
+        {searchOnLeft && showSearch ? (
           <Pressable
             onPress={onToggleSearch}
-            accessibilityRole="button"
+            hitSlop={10}
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
+              width: 32,
+              height: 32,
               alignItems: "center",
               justifyContent: "center",
-              borderWidth: 1,
-              borderColor: "#D7DCE5",
             }}
           >
-            <Text style={{ fontSize: 16 }}>🔍</Text>
+            <Image
+              source={require("@/assets/images/luup.png")}
+              style={{ width: 16, height: 16 }}
+              resizeMode="contain"
+            />
+          </Pressable>
+        ) : showBack ? (
+          <Pressable
+            onPress={onBack ?? (() => router.back())}
+            hitSlop={10}
+            style={{
+              width: 32,
+              height: 32,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Image
+              source={require("@/assets/images/Nool.png")}
+              style={{ width: 16, height: 16, transform: [{ scaleX: -1 }] }}
+              resizeMode="contain"
+            />
           </Pressable>
         ) : (
-          <View style={{ width: 40 }} />
+          <View style={{ width: 32, height: 32 }} />
+        )}
+
+        {/* TITLE */}
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "700",
+              color: "#111827",
+            }}
+          >
+            {title}
+          </Text>
+        </View>
+
+        {/* RIGHT SLOT */}
+        {rightIcon ? (
+          <Pressable
+            onPress={onRightPress}
+            hitSlop={10}
+            style={{
+              width: 32,
+              height: 32,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {rightIcon}
+          </Pressable>
+        ) : rightText ? (
+          <Pressable
+            onPress={onRightPress}
+            hitSlop={10}
+            style={{
+              minWidth: 32,
+              minHeight: 32,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ fontWeight: "600", color: "#4F63AC" }}>
+              {rightText}
+            </Text>
+          </Pressable>
+        ) : (
+          // kui otsing on vasakul, siis paremale ei panda midagi
+          <View style={{ width: 32, height: 32 }} />
         )}
       </View>
 
-      {/* Otsinguväli */}
+      {/* SEARCH FIELD */}
       {showSearch && showSearchInput ? (
         <View style={{ marginTop: 12 }}>
           <TextInput

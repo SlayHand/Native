@@ -1,7 +1,8 @@
 // app/(tabs)/profile/settings.tsx
 import Header from "@/components/Header";
+import ListItem from "@/components/ListItem";
 import { useAuth } from "@/hooks/use-auth";
-import { changePassword, me } from "@/lib/api";
+import { me } from "@/lib/api";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -23,13 +24,7 @@ export default function SettingsScreen() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [user, setUser] = useState<Me | null>(null);
 
-  // password modal
-  const [pwdModal, setPwdModal] = useState(false);
-  const [oldPwd, setOldPwd] = useState("");
-  const [newPwd, setNewPwd] = useState("");
-  const [savingPwd, setSavingPwd] = useState(false);
-
-  // load profile
+  // lae kasutaja
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -40,9 +35,7 @@ export default function SettingsScreen() {
         }
         setLoadingProfile(true);
         const data = await me(token);
-        if (!cancelled) {
-          setUser(data);
-        }
+        if (!cancelled) setUser(data);
       } catch {
         if (!cancelled) {
           setUser(null);
@@ -57,185 +50,106 @@ export default function SettingsScreen() {
     };
   }, [token]);
 
-  function Section({
-    title,
-    action,
-    children,
-  }: {
-    title: string;
-    action?: React.ReactNode;
-    children: React.ReactNode;
-  }) {
-    return (
-      <View style={{ marginTop: 16 }}>
-        <View
-          style={{
-            paddingHorizontal: 4,
-            paddingBottom: 6,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Text style={{ color: "#6B7280" }}>{title}</Text>
-          {action}
-        </View>
-        <View
-          style={{
-            backgroundColor: "#fff",
-            borderRadius: 12,
-            overflow: "hidden",
-            borderWidth: 1,
-            borderColor: "#E5E7EB",
-          }}
-        >
-          {children}
-        </View>
-      </View>
-    );
-  }
-
-  function Row({
-    left,
-    right,
-    onPress,
-  }: {
-    left: React.ReactNode;
-    right?: React.ReactNode;
-    onPress?: () => void;
-  }) {
-    const content = (
-      <View
-        style={{
-          paddingVertical: 14,
-          paddingHorizontal: 16,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <View style={{ flexShrink: 1 }}>{left}</View>
-        {right}
-      </View>
-    );
-    return onPress ? (
-      <Pressable onPress={onPress} style={{ backgroundColor: "#fff" }}>
-        {content}
-      </Pressable>
-    ) : (
-      <View style={{ backgroundColor: "#fff" }}>{content}</View>
-    );
-  }
-
-  function Divider() {
-    return <View style={{ height: 1, backgroundColor: "#E5E7EB" }} />;
-  }
-
-  async function onChangePassword() {
-    try {
-      if (!token) throw new Error("Not signed in");
-      if (!oldPwd || !newPwd) {
-        Alert.alert("Both password fields are required");
-        return;
-      }
-      if (oldPwd === newPwd) {
-        Alert.alert("New password must be different");
-        return;
-      }
-      setSavingPwd(true);
-      await changePassword(token, {
-        oldPassword: oldPwd,
-        newPassword: newPwd,
-      });
-      setOldPwd("");
-      setNewPwd("");
-      setPwdModal(false);
-      Alert.alert("Success", "Password changed");
-    } catch (e: any) {
-      Alert.alert("Change password failed", e?.message ?? "Try again");
-    } finally {
-      setSavingPwd(false);
-    }
-  }
-
   return (
-    <View style={{ flex: 1, backgroundColor: "#F6F6F6" }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <Header title="Settings" showBack />
 
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 16 }}
       >
-        {/* Personal information (read-only) */}
-        <Section
-          title="Personal Information"
-          action={
-            !loadingProfile ? (
-              <Pressable
-                onPress={() => router.push("/(app)/(tabs)/profile/edit")}
-                hitSlop={8}
-              >
-                <Image
-                  source={require("@/assets/images/pencil.png")}
-                  style={{ width: 18, height: 18 }}
-                />
-              </Pressable>
-            ) : null
-          }
+        {/* Personal Information header + pencil */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
-          <Row
-            left={
-              loadingProfile ? (
-                <ActivityIndicator />
-              ) : (
-                <View>
-                  <Text style={{ fontSize: 14, color: "#6B7280" }}>Name</Text>
-                  <Text style={{ fontSize: 18, fontWeight: "700" }}>
-                    {user?.name ?? "—"}
-                  </Text>
-                </View>
-              )
-            }
-          />
-          <Divider />
-          <Row
-            left={
-              loadingProfile ? (
-                <ActivityIndicator />
-              ) : (
-                <View>
-                  <Text style={{ fontSize: 14, color: "#6B7280" }}>Email</Text>
-                  <Text style={{ fontSize: 18, fontWeight: "700" }}>
-                    {user?.email ?? "—"}
-                  </Text>
-                </View>
-              )
-            }
-          />
-        </Section>
+          <Text style={{ color: "#6B7280", fontSize: 13 }}>
+            Personal Information
+          </Text>
 
-        {/* Help Center + Change password */}
-        <Section title="Help Center">
-          <Row
-            left={<Text style={{ fontSize: 16 }}>FAQ</Text>}
-            right={<Text style={{ color: "#9CA3AF" }}>›</Text>}
-            onPress={() => Alert.alert("FAQ", "Coming soon")}
-          />
-          <Divider />
-          <Row
-            left={<Text style={{ fontSize: 16 }}>Contact Us</Text>}
-            right={<Text style={{ color: "#9CA3AF" }}>›</Text>}
-            onPress={() => Alert.alert("Contact Us", "Coming soon")}
-          />
-          <Divider />
-          <Row
-            left={<Text style={{ fontSize: 16 }}>Privacy & Terms</Text>}
-            right={<Text style={{ color: "#9CA3AF" }}>›</Text>}
-            onPress={() => Alert.alert("Privacy & Terms", "Coming soon")}
-          />
-          <Divider />
-        </Section>
+          {!loadingProfile ? (
+            <Pressable
+              onPress={() => router.push("/(app)/(tabs)/profile/edit")}
+              hitSlop={8}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Image
+                source={require("@/assets/images/pencil.png")}
+                style={{ width: 18, height: 18 }}
+              />
+            </Pressable>
+          ) : null}
+        </View>
+
+        {/* Name box */}
+        {loadingProfile ? (
+          <ActivityIndicator />
+        ) : (
+          <>
+            <InfoBox label="Name" value={user?.name || "—"} />
+            <InfoBox label="Email" value={user?.email || "—"} />
+          </>
+        )}
+
+        {/* Help Center */}
+        <View style={{ marginTop: 8 }}>
+          <Text style={{ color: "#6B7280", fontSize: 13, marginBottom: 8 }}>
+            Help Center
+          </Text>
+
+          <View style={{ gap: 12 }}>
+            <ListItem
+              title="FAQ"
+              onPress={() => Alert.alert("FAQ", "Coming soon")}
+            />
+            <ListItem
+              title="Contact Us"
+              onPress={() => Alert.alert("Contact Us", "Coming soon")}
+            />
+            <ListItem
+              title="Privacy & Terms"
+              onPress={() => Alert.alert("Privacy & Terms", "Coming soon")}
+            />
+          </View>
+        </View>
       </ScrollView>
+    </View>
+  );
+}
+
+/**
+ * Figma-stiilis väike kaart: label hall, value sinine, pole noolt.
+ */
+function InfoBox({ label, value }: { label: string; value: string }) {
+  return (
+    <View
+      style={{
+        backgroundColor: "#FFFFFF",
+        borderRadius: 0,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        shadowColor: "#000",
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 2,
+        marginBottom: 12,
+      }}
+    >
+      <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>
+        {label}
+      </Text>
+      <Text style={{ fontSize: 16, fontWeight: "600", color: "#4F63AC" }}>
+        {value}
+      </Text>
     </View>
   );
 }

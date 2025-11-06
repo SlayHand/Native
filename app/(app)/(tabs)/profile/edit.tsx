@@ -99,7 +99,7 @@ export default function EditProfileScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F6F6F6" }}>
+    <View style={{ flex: 1, backgroundColor: "#ffffffff" }}>
       <Header title="Edit Profile" showBack />
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>

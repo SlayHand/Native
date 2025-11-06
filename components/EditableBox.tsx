@@ -6,14 +6,18 @@ type Props = {
   value: string;
   editable?: boolean;
   onChangeText?: (t: string) => void;
+  placeholder?: string;
 };
 
 export default function EditableBox({
   label,
   value,
-  editable,
+  editable = false,
   onChangeText,
+  placeholder,
 }: Props) {
+  const displayValue = value?.trim() ? value : "—";
+
   return (
     <View
       style={{
@@ -22,20 +26,31 @@ export default function EditableBox({
         padding: 16,
         borderWidth: 1,
         borderColor: "#E5E7EB",
+        gap: 6,
       }}
     >
-      <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 6 }}>
-        {label}
-      </Text>
+      <Text style={{ fontSize: 12, color: "#6B7280" }}>{label}</Text>
+
       {editable ? (
         <TextInput
           value={value}
           onChangeText={onChangeText}
-          style={{ fontSize: 16 }}
-          placeholder={label}
+          placeholder={placeholder ?? label}
+          placeholderTextColor="#9CA3AF"
+          style={{
+            backgroundColor: "#fff",
+            borderWidth: 1,
+            borderColor: "#E5E7EB",
+            borderRadius: 10,
+            paddingHorizontal: 10,
+            paddingVertical: 8,
+            fontSize: 16,
+          }}
         />
       ) : (
-        <Text style={{ fontSize: 16, fontWeight: "600" }}>{value}</Text>
+        <Text style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}>
+          {displayValue}
+        </Text>
       )}
     </View>
   );
